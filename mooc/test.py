@@ -1,9 +1,12 @@
 import json
 
-from utils import connect_to_db, relative_path
+from utils import connect_ssh_tunnel, connect_to_db, relative_path
+
+config_file = relative_path("config.yaml")
 
 # Se connecter à la base de données MongoDB
-client = connect_to_db(relative_path("config.yaml"), "database_mongodb", True, "ssh")
+sshtunnel = connect_ssh_tunnel(config_file, "ssh")
+client = connect_to_db(config_file, "database_mongodb")
 db = client['MOOC']
 collection = db['forum']
 
@@ -34,5 +37,7 @@ for document in collection.find()[:10]:
             data.append(document_data)
 
 # Convertir la liste de données en JSON
-json_data = json.dumps(data)
+json_data = json.dumps(data, indent=4)
 print(json_data)
+
+sshtunnel.stop()

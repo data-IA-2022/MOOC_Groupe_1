@@ -22,25 +22,30 @@ def calc_time(start_time):
     return h + m + s
 
 
-def connect_to_db(config_file, section, ssh=False, ssh_section=None, local_port=None):
+def connect_ssh_tunnel(config_file, section):
 
     # Read configuration information from file
     config = yaml.safe_load(open(config_file, 'r'))
 
-    if ssh:
-        ssh_config = config[ssh_section]
+    ssh_config = config[section]
 
-        server = SSHTunnelForwarder(
-            ssh_config['host'],
-            ssh_username=ssh_config['user'],
-            ssh_password=ssh_config['password'],
-            remote_bind_address=(ssh_config['remote_adr'], ssh_config['remote_port']),
-            local_bind_address=(ssh_config['local_adr'], ssh_config['local_port'])
-        )
+    server = SSHTunnelForwarder(
+        ssh_config['host'],
+        ssh_username=ssh_config['user'],
+        ssh_password=ssh_config['password'],
+        remote_bind_address=(ssh_config['remote_adr'], ssh_config['remote_port']),
+        local_bind_address=(ssh_config['local_adr'], ssh_config['local_port'])
+    )
 
-        server.start()
+    server.start()
 
-    # Connect to database using SQLAlchemy
+    return server
+
+
+def connect_to_db(config_file, section):
+
+    # Read configuration information from file
+    config = yaml.safe_load(open(config_file, 'r'))
 
     url_pswd = ":{password}".format(**config[section]) if config[section]["password"] != None else ""
     url_user = "{user}{url_pswd}@".format(**config[section], url_pswd = url_pswd) if config[section]["user"] != None else ""
