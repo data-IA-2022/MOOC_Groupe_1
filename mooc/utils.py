@@ -1,7 +1,7 @@
-from os.path import join, dirname
 import time
+from os.path import dirname, join
+
 import yaml
-import paramiko
 from sshtunnel import SSHTunnelForwarder
 
 
