@@ -31,10 +31,10 @@ def connect_ssh_tunnel(config_file, section):
 
     server = SSHTunnelForwarder(
         ssh_config['host'],
-        ssh_username=ssh_config['user'],
-        ssh_password=ssh_config['password'],
-        remote_bind_address=(ssh_config['remote_adr'], ssh_config['remote_port']),
-        local_bind_address=(ssh_config['local_adr'], ssh_config['local_port'])
+        ssh_username = ssh_config['user'],
+        ssh_password = ssh_config['password'],
+        remote_bind_address = (ssh_config['remote_adr'], ssh_config['remote_port']),
+        local_bind_address = (ssh_config['local_adr'], ssh_config['local_port'])
     )
 
     server.start()

@@ -1,43 +1,31 @@
 import json
-
+from sqlalchemy import MetaData
+from sqlalchemy.dialects.mysql import insert
 from utils import connect_ssh_tunnel, connect_to_db, relative_path
 
 config_file = relative_path("config.yaml")
+sshtunnel_mysql = connect_ssh_tunnel(config_file, "ssh_mysql")
 
-# Se connecter à la base de données MongoDB
-sshtunnel = connect_ssh_tunnel(config_file, "ssh")
-client = connect_to_db(config_file, "database_mongodb")
-db = client['MOOC']
-collection = db['forum']
+mysqlEngine = connect_to_db(config_file, "database_mysql")
 
-# Créer une liste pour stocker les données
-data = []
 
-# Boucler sur chaque document de la collection
-for document in collection.find()[:10]:
-    # Récupérer le nom d'utilisateur et l'ID s'ils existent
-    if '_id' in document:
-        message_id = str(document['_id'])
+META = MetaData()
+META.reflect(bind=mysqlEngine)
 
-        # Récupérer la valeur de la clé 'content' s'il existe
-        if 'content' in document:
-            content = document['content']
+TABLE_USERS = META.tables['Users']
 
-            # Créer un dictionnaire pour stocker les données de chaque document
-            document_data = {'message_id': message_id}
 
-            # Ajouter les données de la clé 'content' au dictionnaire
-            if 'user_id' in content:
-                document_data['user_id'] = content['user_id']
+stmt = insert(TABLE_USERS).values(id = '252415698525636547854125', username = 'Pouet')
 
-            if 'username' in content:
-                document_data['username'] = content['username']
+print(stmt)
 
-            # Ajouter le dictionnaire à la liste de données
-            data.append(document_data)
+stmt = stmt.on_duplicate_key_update(
+    id = stmt.inserted.id,
+    status = 'U'
+)
 
-# Convertir la liste de données en JSON
-json_data = json.dumps(data, indent=4)
-print(json_data)
-
-sshtunnel.stop()
+print('-------- EXECUTE')
+mysqlEngine.execute(stmt)
+print('-------- commit')
+mysqlEngine.commit()
+print('-------- end')
