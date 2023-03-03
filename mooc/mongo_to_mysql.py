@@ -100,7 +100,7 @@ for doc in cursor:
     year_of_birth = None
 
     for key in doc:
-        if key in ('_id', 'id', 'username'): continue
+        if key in ('_id', 'id', 'username', 'data'): continue
 
         stmt.append(insert(TABLE_COURSE).values(id = key))
 
