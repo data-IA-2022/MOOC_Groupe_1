@@ -169,7 +169,8 @@ nb_chunks = 20
 
 for key in tables_in_order:
 
-    print(f"\n ----- EXECUTE {key.upper}\n")
+    total_time = time.time()
+    print(f"\n ----- EXECUTE {key.upper()}\n")
     chunk_size = ceil(len(stmts[key]) / nb_chunks)
 
     for x in range(20):
@@ -178,7 +179,9 @@ for key in tables_in_order:
 
         mysqlConn.execute(insert(META.tables[key]).prefix_with("IGNORE"), stmts[key][x * chunk_size: (x + 1) * chunk_size])
 
-        print(f" - {(x + 1) * 100 / nb_chunks:3} %   EXECUTE {key.upper()}   {calc_time(t)}")
+        print(f" - {int((x + 1) * 100 / nb_chunks):3} %   EXECUTE {key.upper()}   {calc_time(t)}")
+
+    print(f"--- EXECUTE {key.upper()} TIME : {calc_time(total_time)}")
 
 print('\n-------- COMMIT')
 mysqlConn.commit()
