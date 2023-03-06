@@ -67,6 +67,4 @@ def connect_to_db(config_file, section):
 
         from sqlalchemy import create_engine
 
-        engine = create_engine(url)
-
-        return engine.connect()
+        return create_engine(url)

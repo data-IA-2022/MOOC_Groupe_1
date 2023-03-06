@@ -12,6 +12,9 @@ sshtunnel_mysql = connect_ssh_tunnel(config_file, "ssh_mysql")
 mongoClient = connect_to_db(config_file, "database_mongodb")
 mysqlEngine = connect_to_db(config_file, "database_mysql")
 
+mysqlConn = mysqlEngine.connect().execution_options(isolation_level="AUTOCOMMIT")
+mysqlConn.begin()
+
 print(mongoClient)
 print(mysqlEngine)
 
@@ -24,8 +27,13 @@ TABLE_MESSAGES = META.tables['Messages']
 TABLE_COURSE = META.tables['Course']
 TABLE_NOTES = META.tables['Notes']
 
-stmt = []
-stmt_notes = []
+stmts = {
+    'users': [],
+    'threads': [],
+    'messages': [],
+    'course': [],
+    'notes': [],
+}
 
 
 def recur_message(msg, f, thread_id, parent_id = None):
@@ -74,9 +82,9 @@ def traitement(msg, thread_id, parent_id=None):
     }
 
     if not msg['anonymous'] and not msg['anonymous_to_peers']:
-        stmt.append(insert(TABLE_USERS).values(id = msg['user_id'], username = msg['username']))
+        stmts['users'].append(insert(TABLE_USERS).values(id = msg['user_id'], username = msg['username']).prefix_with('IGNORE'))
 
-    stmt.append(insert(TABLE_MESSAGES).values(**data_insert))
+    stmts['messages'].append(insert(TABLE_MESSAGES).values(**data_insert).prefix_with('IGNORE'))
 
     # mysqlEngine.execute("""INSERT INTO Messages
     #                     (id, type, created_at, user_id, depth, body, parent_id) 
@@ -93,10 +101,10 @@ def traitement_user(doc):
     for key in doc:
         if key in ('_id', 'id', 'username', 'data'): continue
 
-        stmt.append(insert(TABLE_COURSE).values(id = key))
+        stmts['course'].append(insert(TABLE_COURSE).values(id = key).prefix_with('IGNORE'))
 
         if 'grade' in doc[key]:
-            stmt_notes.append(insert(TABLE_NOTES).values(course_id = key, user_id = doc['_id'], grade = doc[key]['grade']))
+            stmts['notes'].append(insert(TABLE_NOTES).values(course_id = key, user_id = doc['_id'], grade = doc[key]['grade']).prefix_with('IGNORE'))
 
         if 'gender' in doc[key]:
             gender = doc[key]['gender'] if doc[key]['gender'] != 'None' else None
@@ -104,29 +112,20 @@ def traitement_user(doc):
         if 'year_of_birth' in doc[key]:
             year_of_birth = doc[key]['year_of_birth'] if doc[key]['year_of_birth'] != 'None' else None
 
-    stmt.append(insert(TABLE_USERS).values(id = doc['_id'], username = doc['username'], gender = gender, year_of_birth = year_of_birth))
+    stmts['users'].append(insert(TABLE_USERS).values(id = doc['_id'], username = doc['username'], gender = gender, year_of_birth = year_of_birth).prefix_with('IGNORE'))
 
 
 def traitement_forum(doc):
 
-    stmt.append(insert(TABLE_COURSE).values(id = doc['content']['course_id']))
-    stmt.append(insert(TABLE_THREADS).values(
+    stmts['course'].append(insert(TABLE_COURSE).values(id = doc['content']['course_id']).prefix_with('IGNORE'))
+    stmts['threads'].append(insert(TABLE_THREADS).values(
             id = doc['_id'],
             course_id = doc['content']['course_id'],
             title = doc['content']['title'],
             comments_count = doc['content']['comments_count']
-        ))
+        ).prefix_with('IGNORE'))
 
     recur_message(doc['content'], traitement, doc['_id'])
-
-
-def execute_stmt(s):
-
-    s = s.on_duplicate_key_update(
-        id = s.inserted.id,
-        status = 'U'
-    )
-    mysqlEngine.execute(s)
 
 
 def boucles(cursor, boucle, name_print, len_cursor, print_insert = False):
@@ -136,7 +135,7 @@ def boucles(cursor, boucle, name_print, len_cursor, print_insert = False):
     n = 0
     perc = 0
     if print_insert :
-        len_stmt = len(stmt) + len(stmt_notes)
+        len_stmt = sum([len(stmts[key]) for key in stmts])
     total_time = time.time()
     t = time.time()
 
@@ -151,13 +150,13 @@ def boucles(cursor, boucle, name_print, len_cursor, print_insert = False):
 
             perc = n_perc
 
-            str_insert = f"({len(stmt) + len(stmt_notes) - len_stmt} inserts) " if print_insert else ""
-            print(f" - {perc:3}%   {name_print} {str_insert}  {calc_time(t)}")
+            str_insert = f"({sum([len(stmts[key]) for key in stmts]) - len_stmt:7} inserts) " if print_insert else ""
+            print(f" - {perc:3} %   {name_print:10} {str_insert}  {calc_time(t)}")
 
             t = time.time()
 
             if print_insert:
-                len_stmt = len(stmt) + len(stmt_notes)
+                len_stmt = sum([len(stmts[key]) for key in stmts])
 
     print(f"--- {name_print} TIME : {calc_time(total_time)}")
 
@@ -165,24 +164,25 @@ def boucles(cursor, boucle, name_print, len_cursor, print_insert = False):
 db = mongoClient['g1-MOOC']
 global_time = time.time()
 
-cursor = db['User'].find()
+cursor = db['User'].find().limit(100)
 len_cursor = len(list(cursor.clone()))
 
 boucles(cursor, traitement_user, "USER", len_cursor, True)
 
-cursor = db['Forum'].find()
+cursor = db['Forum'].find().limit(100)
 len_cursor = len(list(cursor.clone()))
 
 boucles(cursor, traitement_forum, "FORUM", len_cursor, True)
 
-boucles(stmt, execute_stmt, "EXECUTE STMT", len(stmt))
+tables_in_order = ['course', 'users', 'notes', 'threads', 'messages']
 
-boucles(stmt_notes, mysqlEngine.execute, "EXECUTE STMT NOTES", len(stmt_notes))
+for key in tables_in_order:
+    boucles(stmts[key], mysqlConn.execute, f"EXECUTE {key.upper()}", len(stmts[key]))
 
 print('\n-------- COMMIT')
-mysqlEngine.commit()
+mysqlConn.commit()
 print('\n-------- END')
 
-print(f"\nTOTAL INSERT COUNT : {len(stmt) + len(stmt_notes)}\n")
+print(f"\nTOTAL INSERT COUNT : {sum([len(stmts[key]) for key in stmts])}\n")
 
 print(f"\nGLOBAL TIME : {calc_time(global_time)}")
