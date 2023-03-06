@@ -1,4 +1,5 @@
 import time
+from math import ceil
 
 from sqlalchemy import MetaData
 from sqlalchemy.dialects.mysql import insert
@@ -21,18 +22,12 @@ print(mysqlEngine)
 META = MetaData()
 META.reflect(bind=mysqlEngine)
 
-TABLE_USERS = META.tables['Users']
-TABLE_THREADS = META.tables['Threads']
-TABLE_MESSAGES = META.tables['Messages']
-TABLE_COURSE = META.tables['Course']
-TABLE_NOTES = META.tables['Notes']
-
 stmts = {
-    'users': [],
-    'threads': [],
-    'messages': [],
-    'course': [],
-    'notes': [],
+    'Users': [],
+    'Threads': [],
+    'Messages': [],
+    'Course': [],
+    'Notes': [],
 }
 
 
@@ -71,20 +66,20 @@ def traitement(msg, thread_id, parent_id=None):
     dt = f"{dt[:10]} {dt[11:19]}"
 
     data_insert = {
-        'id' : msg['id'],
-        'type' : msg['type'],
-        'created_at' : dt,
-        'user_id' : msg['user_id'] if 'user_id' in msg else None,
-        'depth' : msg['depth'] if 'depth' in msg else None,
-        'body' : msg['body'],
-        'parent_id' : parent_id,
-        'thread_id' : thread_id,
+        'id':           msg['id'],
+        'type':         msg['type'],
+        'created_at':   dt,
+        'user_id':      msg['user_id'] if 'user_id' in msg else None,
+        'depth':        msg['depth'] if 'depth' in msg else None,
+        'body':         msg['body'],
+        'parent_id':    parent_id,
+        'thread_id':    thread_id,
     }
 
     if not msg['anonymous'] and not msg['anonymous_to_peers']:
-        stmts['users'].append(insert(TABLE_USERS).values(id = msg['user_id'], username = msg['username']).prefix_with('IGNORE'))
+        stmts['Users'].append({'id': msg['user_id'], 'username': msg['username'], 'gender': None, 'year_of_birth': None})
 
-    stmts['messages'].append(insert(TABLE_MESSAGES).values(**data_insert).prefix_with('IGNORE'))
+    stmts['Messages'].append(data_insert)
 
     # mysqlEngine.execute("""INSERT INTO Messages
     #                     (id, type, created_at, user_id, depth, body, parent_id) 
@@ -101,29 +96,24 @@ def traitement_user(doc):
     for key in doc:
         if key in ('_id', 'id', 'username', 'data'): continue
 
-        stmts['course'].append(insert(TABLE_COURSE).values(id = key).prefix_with('IGNORE'))
+        stmts['Course'].append({'id': key})
 
         if 'grade' in doc[key]:
-            stmts['notes'].append(insert(TABLE_NOTES).values(course_id = key, user_id = doc['_id'], grade = doc[key]['grade']).prefix_with('IGNORE'))
+            stmts['Notes'].append({'course_id': key, 'user_id': doc['_id'], 'grade': doc[key]['grade']})
 
         if 'gender' in doc[key]:
-            gender = doc[key]['gender'] if doc[key]['gender'] != 'None' else None
+            gender = doc[key]['gender'] if doc[key]['gender'] != 'None' or doc[key]['gender'] != '' else None
 
         if 'year_of_birth' in doc[key]:
             year_of_birth = doc[key]['year_of_birth'] if doc[key]['year_of_birth'] != 'None' else None
 
-    stmts['users'].append(insert(TABLE_USERS).values(id = doc['_id'], username = doc['username'], gender = gender, year_of_birth = year_of_birth).prefix_with('IGNORE'))
+    stmts['Users'].append({'id': doc['_id'], 'username': doc['username'], 'gender': gender, 'year_of_birth': year_of_birth})
 
 
 def traitement_forum(doc):
 
-    stmts['course'].append(insert(TABLE_COURSE).values(id = doc['content']['course_id']).prefix_with('IGNORE'))
-    stmts['threads'].append(insert(TABLE_THREADS).values(
-            id = doc['_id'],
-            course_id = doc['content']['course_id'],
-            title = doc['content']['title'],
-            comments_count = doc['content']['comments_count']
-        ).prefix_with('IGNORE'))
+    stmts['Course'].append({'id': doc['content']['course_id']})
+    stmts['Threads'].append({'id': doc['_id'], 'course_id': doc['content']['course_id'], 'title': doc['content']['title'], 'comments_count': doc['content']['comments_count']})
 
     recur_message(doc['content'], traitement, doc['_id'])
 
@@ -164,20 +154,31 @@ def boucles(cursor, boucle, name_print, len_cursor, print_insert = False):
 db = mongoClient['g1-MOOC']
 global_time = time.time()
 
-cursor = db['User'].find().limit(100)
+cursor = db['User'].find().limit(1000)
 len_cursor = len(list(cursor.clone()))
 
 boucles(cursor, traitement_user, "USER", len_cursor, True)
 
-cursor = db['Forum'].find().limit(100)
+cursor = db['Forum'].find().limit(1000)
 len_cursor = len(list(cursor.clone()))
 
 boucles(cursor, traitement_forum, "FORUM", len_cursor, True)
 
-tables_in_order = ['course', 'users', 'notes', 'threads', 'messages']
+tables_in_order = ['Course', 'Users', 'Notes', 'Threads', 'Messages']
+nb_chunks = 20
 
 for key in tables_in_order:
-    boucles(stmts[key], mysqlConn.execute, f"EXECUTE {key.upper()}", len(stmts[key]))
+
+    print(f"\n ----- EXECUTE {key.upper}\n")
+    chunk_size = ceil(len(stmts[key]) / nb_chunks)
+
+    for x in range(20):
+
+        t = time.time()
+
+        mysqlConn.execute(insert(META.tables[key]).prefix_with("IGNORE"), stmts[key][x * chunk_size: (x + 1) * chunk_size])
+
+        print(f" - {(x + 1) * 100 / nb_chunks:3} %   EXECUTE {key.upper()}   {calc_time(t)}")
 
 print('\n-------- COMMIT')
 mysqlConn.commit()
