@@ -40,15 +40,15 @@ def recur_message(msg, f, thread_id, parent_id = None):
 
     if 'children' in msg:
         for child in msg['children']:
-            recur_message(child, f, thread_id, parent_id=msg['id'])
+            recur_message(child, f, thread_id, parent_id = msg['id'])
 
     if 'non_endorsed_responses' in msg:
         for child in msg['non_endorsed_responses']:
-            recur_message(child, f, thread_id, parent_id=msg['id'])
+            recur_message(child, f, thread_id, parent_id = msg['id'])
 
     if 'endorsed_responses' in msg:
         for child in msg['endorsed_responses']:
-            recur_message(child, f, thread_id, parent_id=msg['id'])
+            recur_message(child, f, thread_id, parent_id = msg['id'])
 
 
 def traitement(msg, thread_id, parent_id=None):
@@ -72,7 +72,7 @@ def traitement(msg, thread_id, parent_id=None):
         'thread_id' : thread_id,
     }
 
-    if not msg['anonymous']:
+    if not msg['anonymous'] and not msg['anonymous_to_peers']:
         stmt.append(insert(TABLE_USERS).values(id = msg['user_id'], username = msg['username']))
 
     stmt.append(insert(TABLE_MESSAGES).values(**data_insert))
@@ -86,6 +86,8 @@ def traitement(msg, thread_id, parent_id=None):
 
 db = mongoClient['g1-MOOC']
 start_time = time.time()
+
+print("\n ----- USER\n")
 
 cursor = db['User'].find()
 doc_count = len(list(cursor.clone()))
@@ -124,6 +126,7 @@ for doc in cursor:
 
 print(f"--- USER TIME : {calc_time(user_time)}")
 
+print("\n ----- FORUM\n")
 cursor = db['Forum'].find()
 doc_count = len(list(cursor.clone()))
 n = 0
@@ -152,6 +155,7 @@ for doc in cursor:
 
 print(f"--- FORUM TIME : {calc_time(forum_time)}")
 
+print("\n ----- EXECUTE STMT\n")
 n = 0
 perc = 0
 stmt_time = time.time()
@@ -172,6 +176,7 @@ for s in stmt:
 
 print(f"--- EXECUTE STMT TIME : {calc_time(stmt_time)}")
 
+print("\n ----- EXECUTE STMT NOTES\n")
 n = 0
 perc = 0
 stmt_notes_time = time.time()
@@ -188,8 +193,10 @@ for s in stmt_notes:
 
 print(f"--- EXECUTE STMT NOTES TIME : {calc_time(stmt_notes_time)}")
 
-print('-------- COMMIT')
+print('\n-------- COMMIT')
 mysqlEngine.commit()
-print('-------- END')
+print('\n-------- END')
 
-print(f"GLOBAL TIME : {calc_time(start_time)}")
+print(f"\nTOTAL INSERT COUNT : {len(stmt) + len(stmt_notes)}\n")
+
+print(f"\nGLOBAL TIME : {calc_time(start_time)}")

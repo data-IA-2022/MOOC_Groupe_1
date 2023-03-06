@@ -25,16 +25,78 @@ TABLE_NOTES = META.tables['Notes']
 
 db = mongoClient['g1-MOOC']
 
-cursor = db['User'].find()
+cursor = db['Forum'].find()
 
-c = 0
+errors = {
+    'anonymous_to_peers_true':0,
+    'anonymous_to_peers_false':0,
+    'anonymous_to_peers_errors_true':0,
+    'anonymous_to_peers_errors_false':0,
+          }
+
+def traitement(msg, thread_id, parent_id=None):
+    '''
+    Effectue un traitement sur l'obj passé (Message)
+    :param msg: Message
+    :return:
+    '''
+
+    dt = msg['created_at']
+    dt = f"{dt[:10]} {dt[11:19]}"
+
+    data_insert = {
+        'id' : msg['id'],
+        'type' : msg['type'],
+        'created_at' : dt,
+        'user_id' : msg['user_id'] if 'user_id' in msg else None,
+        'depth' : msg['depth'] if 'depth' in msg else None,
+        'body' : msg['body'],
+        'parent_id' : parent_id,
+        'thread_id' : thread_id,
+    }
+
+    try:
+        if not msg['anonymous'] and not msg['anonymous_to_peers']:
+            msg['user_id']
+            msg['username']
+
+    except KeyError:
+        #print(msg)
+        if msg['anonymous_to_peers']:
+            errors['anonymous_to_peers_errors_true'] += 1
+        else:
+            errors['anonymous_to_peers_errors_false'] += 1
+
+        print(thread_id)
+        print(parent_id)
+
+    else:
+
+        if 'anonymous_to_peers' in msg:
+            if msg['anonymous_to_peers']:
+                errors['anonymous_to_peers_true'] += 1
+            else:
+                errors['anonymous_to_peers_false'] += 1
+
+
+def recur_message(msg, thread_id, parent_id = None):
+
+    traitement(msg, thread_id, parent_id)
+    if 'children' in msg:
+        for child in msg['children']:
+            recur_message(child, thread_id, parent_id = msg['id'])
+
+    if 'non_endorsed_responses' in msg:
+        for child in msg['non_endorsed_responses']:
+            recur_message(child, thread_id, parent_id = msg['id'])
+
+    if 'endorsed_responses' in msg:
+        for child in msg['endorsed_responses']:
+            recur_message(child, thread_id, parent_id = msg['id'])
+
+
 for doc in cursor:
 
-    for key in doc:
-        if key in ('_id', 'id', 'username'): continue
+    recur_message(doc['content'], doc['_id'])
 
-        if key == 'data':
-            c+= 1
-            print(doc['_id'])
-
-print(c)
+print(errors)
