@@ -1,0 +1,30 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Analyse de sentiments, détection de langues et de réussite avec Django</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+</head>
+<body>
+    <h1>Analyse de sentiments, détection de langues et de réussite avec Django</h1>
+    
+    <!-- Onglets -->
+    <div class="tab">
+        <div class="tab-container">
+            <button class="tablinks active" onclick="openTab(event, 'sentiment')">Analyse de sentiment</button>
+        </div>
+        <div class="tab-container">
+            <button class="tablinks" onclick="openTab(event, 'language')">Détection de langue</button>
+        </div>
+        <div class="tab-container">
+            <button class="tablinks" onclick="openTab(event, 'success')">Calcul de réussite</button>
+        </div>
+        <div class="tab-container">
+            <button class="tablinks" onclick="openTab(event, 'Analise')">Analyse</button>
+        </div>
+    </div>
+    
+</body>
+</html>
+
+    
