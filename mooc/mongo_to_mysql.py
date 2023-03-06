@@ -2,7 +2,7 @@ import time
 
 from sqlalchemy import MetaData
 from sqlalchemy.dialects.mysql import insert
-from utils import connect_ssh_tunnel, connect_to_db, relative_path, calc_time
+from utils import calc_time, connect_ssh_tunnel, connect_to_db, relative_path
 
 config_file = relative_path("config.yaml")
 
@@ -26,6 +26,7 @@ TABLE_NOTES = META.tables['Notes']
 
 stmt = []
 stmt_notes = []
+
 
 def recur_message(msg, f, thread_id, parent_id = None):
     '''
@@ -84,19 +85,7 @@ def traitement(msg, thread_id, parent_id=None):
     #                     [msg['id'], msg['type'], dt, user_id, msg['depth'] if 'depth' in msg else None, msg['body'], parent_id])
 
 
-db = mongoClient['g1-MOOC']
-start_time = time.time()
-
-print("\n ----- USER\n")
-
-cursor = db['User'].find()
-doc_count = len(list(cursor.clone()))
-n = 0
-perc = 0
-len_stmt = len(stmt) + len(stmt_notes)
-user_time = time.time()
-
-for doc in cursor:
+def traitement_user(doc):
 
     gender = None
     year_of_birth = None
@@ -117,24 +106,8 @@ for doc in cursor:
 
     stmt.append(insert(TABLE_USERS).values(id = doc['_id'], username = doc['username'], gender = gender, year_of_birth = year_of_birth))
 
-    n += 1
-    n_perc = int(n / doc_count * 100)
-    if perc // 5 != n_perc // 5:
-        perc = n_perc
-        print(f" - {perc:3}%   USER ({len(stmt) + len(stmt_notes) - len_stmt} inserts)")
-        len_stmt = len(stmt) + len(stmt_notes)
 
-print(f"--- USER TIME : {calc_time(user_time)}")
-
-print("\n ----- FORUM\n")
-cursor = db['Forum'].find()
-doc_count = len(list(cursor.clone()))
-n = 0
-perc = 0
-len_stmt = len(stmt) + len(stmt_notes)
-forum_time = time.time()
-
-for doc in cursor:
+def traitement_forum(doc):
 
     stmt.append(insert(TABLE_COURSE).values(id = doc['content']['course_id']))
     stmt.append(insert(TABLE_THREADS).values(
@@ -146,21 +119,8 @@ for doc in cursor:
 
     recur_message(doc['content'], traitement, doc['_id'])
 
-    n += 1
-    n_perc = int(n / doc_count * 100)
-    if perc // 5 != n_perc // 5:
-        perc = n_perc
-        print(f" - {perc:3}%   FORUM ({len(stmt) + len(stmt_notes) - len_stmt} inserts)")
-        len_stmt = len(stmt) + len(stmt_notes)
 
-print(f"--- FORUM TIME : {calc_time(forum_time)}")
-
-print("\n ----- EXECUTE STMT\n")
-n = 0
-perc = 0
-stmt_time = time.time()
-
-for s in stmt:
+def execute_stmt(s):
 
     s = s.on_duplicate_key_update(
         id = s.inserted.id,
@@ -168,30 +128,56 @@ for s in stmt:
     )
     mysqlEngine.execute(s)
 
-    n += 1
-    n_perc = int(n / len(stmt) * 100)
-    if perc // 5 != n_perc // 5:
-        perc = n_perc
-        print(f" - {perc:3}%   EXECUTE STMT")
 
-print(f"--- EXECUTE STMT TIME : {calc_time(stmt_time)}")
+def boucles(cursor, boucle, name_print, len_cursor, print_insert = False):
 
-print("\n ----- EXECUTE STMT NOTES\n")
-n = 0
-perc = 0
-stmt_notes_time = time.time()
+    print(f"\n ----- {name_print}\n")
 
-for s in stmt_notes:
+    n = 0
+    perc = 0
+    if print_insert :
+        len_stmt = len(stmt) + len(stmt_notes)
+    total_time = time.time()
+    t = time.time()
 
-    mysqlEngine.execute(s)
+    for doc in cursor:
 
-    n += 1
-    n_perc = int(n / len(stmt_notes) * 100)
-    if perc // 5 != n_perc // 5:
-        perc = n_perc
-        print(f" - {perc:3}%   EXECUTE STMT NOTES")
+        boucle(doc)
 
-print(f"--- EXECUTE STMT NOTES TIME : {calc_time(stmt_notes_time)}")
+        n += 1
+        n_perc = int(n / len_cursor * 100)
+
+        if perc // 5 != n_perc // 5:
+
+            perc = n_perc
+
+            str_insert = f"({len(stmt) + len(stmt_notes) - len_stmt} inserts) " if print_insert else ""
+            print(f" - {perc:3}%   {name_print} {str_insert}  {calc_time(t)}")
+
+            t = time.time()
+
+            if print_insert:
+                len_stmt = len(stmt) + len(stmt_notes)
+
+    print(f"--- {name_print} TIME : {calc_time(total_time)}")
+
+
+db = mongoClient['g1-MOOC']
+global_time = time.time()
+
+cursor = db['User'].find()
+len_cursor = len(list(cursor.clone()))
+
+boucles(cursor, traitement_user, "USER", len_cursor, True)
+
+cursor = db['Forum'].find()
+len_cursor = len(list(cursor.clone()))
+
+boucles(cursor, traitement_forum, "FORUM", len_cursor, True)
+
+boucles(stmt, execute_stmt, "EXECUTE STMT", len(stmt))
+
+boucles(stmt_notes, mysqlEngine.execute, "EXECUTE STMT NOTES", len(stmt_notes))
 
 print('\n-------- COMMIT')
 mysqlEngine.commit()
@@ -199,4 +185,4 @@ print('\n-------- END')
 
 print(f"\nTOTAL INSERT COUNT : {len(stmt) + len(stmt_notes)}\n")
 
-print(f"\nGLOBAL TIME : {calc_time(start_time)}")
+print(f"\nGLOBAL TIME : {calc_time(global_time)}")
