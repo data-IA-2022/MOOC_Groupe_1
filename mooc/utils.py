@@ -16,9 +16,9 @@ def calc_time(start_time):
     h = int(d / 3600)
     h = f"{h} h " if d > 3600 else ''
     m = int(d % 3600 / 60)
-    m = f"{m} m " if d > 60 else ''
+    m = f"{m:02} m " if d >= 3600 else f"{m} m " if d > 60 else ''
     s = int(d % 3600 % 60)
-    s = f"{s} s"
+    s = f"{s:02} s" if d >= 60 else f"{s} s"
     return h + m + s
 
 
