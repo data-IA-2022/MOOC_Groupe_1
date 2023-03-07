@@ -1,37 +1,44 @@
 body {
     background: #ccc;
-    width: 75%;
+    width: 100%;
     height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
+img{
+    position: relative;
+}
 h1 {
     height: 100%;
     text-align: center;
-    margin-top: 0;
     justify-content: center;
-
+    margin: 0 auto 20px;
+    position: absolute;
+    
 }
 
-/* Style des onglets */
 .tab {
     display: flex;
-    width: 100%;
-    height: 100%;
+    width: 50%;
+    height: 50%;
     flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
 }
 
 .tab-container {
+    position: relative;
     width: 50%;
-    height: 50%;
+    height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-}
-
-.tablinks {
+  }
+  
+  .tablinks {
     background-color: #f1f1f1;
     color: black;
     padding: 14px 16px;
@@ -41,8 +48,12 @@ h1 {
     outline: none;
     cursor: pointer;
     transition: 0.3s;
+    position: absolute;
+    bottom: 0;
+  }
+  .tabimage {
+    width: 500px;
+    height: 250px;
+    margin: 0 20px;
 }
-
-.tablinks.active {
-    background-color: #ccc;
-}
+  

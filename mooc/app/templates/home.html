@@ -7,22 +7,26 @@
 </head>
 <body>
     <h1>Analyse de sentiments, détection de langues et de réussite avec Django</h1>
-    
     <!-- Onglets -->
     <div class="tab">
         <div class="tab-container">
-            <button class="tablinks active" onclick="openTab(event, 'sentiment')">Analyse de sentiment</button>
+            <img class="tabimage" src="{% static 'analyses_sentiments.jpeg' %}" alt="Image 1">
+            <button class="tablinks" onclick="openTab(event, 'sentiment')">Analyse de sentiment</button>
         </div>
         <div class="tab-container">
+            <img class="tabimage" src="{% static 'detection_language.jpg' %}" alt="Image 2">
             <button class="tablinks" onclick="openTab(event, 'language')">Détection de langue</button>
         </div>
         <div class="tab-container">
+            <img class="tabimage" src="{% static 'reussite_ou_echec.jpeg' %}" alt="Image 3">
             <button class="tablinks" onclick="openTab(event, 'success')">Calcul de réussite</button>
         </div>
         <div class="tab-container">
+            <img class="tabimage" src="{% static 'analyze.jpeg' %}" alt="Image 4">
             <button class="tablinks" onclick="openTab(event, 'Analise')">Analyse</button>
         </div>
     </div>
+    
     
 </body>
 </html>
