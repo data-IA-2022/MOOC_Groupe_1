@@ -1,0 +1,35 @@
+database_mongodb:
+    user:           
+    password:       
+    host:           127.0.0.1
+    port:           27018
+    type:           mongodb
+    db_name:        
+
+database_mysql:
+    user:           root
+    password:       greta2023
+    host:           127.0.0.1
+    port:           3305
+    type:           mysql
+    db_name:        g1
+
+ssh_mongodb:
+    user:           greta
+    password:       greta2023!!!
+    host:           vmp2.francecentral.cloudapp.azure.com
+    port:           22
+    remote_adr:     172.17.0.4
+    remote_port:    27017
+    local_adr:      127.0.0.1
+    local_port:     27018
+
+ssh_mysql:
+    user:           greta
+    password:       greta2023!!!
+    host:           vmp2.francecentral.cloudapp.azure.com
+    port:           22
+    remote_adr:     172.17.0.2
+    remote_port:    3306
+    local_adr:      127.0.0.1
+    local_port:     3305

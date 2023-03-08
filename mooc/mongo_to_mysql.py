@@ -1,11 +1,11 @@
 import time
-from math import ceil
 
+from unidecode import unidecode
 from sqlalchemy import MetaData
 from sqlalchemy.dialects.mysql import insert
 from utils import calc_time, connect_ssh_tunnel, connect_to_db, relative_path
 
-config_file = relative_path("config.yaml")
+config_file = relative_path("config_vm.yaml")
 
 sshtunnel_mongodb = connect_ssh_tunnel(config_file, "ssh_mongodb")
 sshtunnel_mysql = connect_ssh_tunnel(config_file, "ssh_mysql")
@@ -24,6 +24,7 @@ META.reflect(bind=mysqlEngine)
 
 stmts = {
     'Users': [],
+    'Users_2': [],
     'Threads': [],
     'Messages': [],
     'Course': [],
@@ -77,7 +78,15 @@ def traitement(msg, thread_id, parent_id=None):
     }
 
     if not msg['anonymous'] and not msg['anonymous_to_peers']:
-        stmts['Users'].append({'id': msg['user_id'], 'username': msg['username'], 'gender': None, 'year_of_birth': None})
+        stmts['Users_2'].append({
+            'id':                   msg['user_id'],
+            'username':             msg['username'],
+            'gender':               None,
+            'year_of_birth':        None,
+            'city':                 None,
+            'country':              None,
+            'level_of_education':   None
+        })
 
     stmts['Messages'].append(data_insert)
 
@@ -90,8 +99,13 @@ def traitement(msg, thread_id, parent_id=None):
 
 def traitement_user(doc):
 
-    gender = None
-    year_of_birth = None
+    gender              = None
+    year_of_birth       = None
+    city                = None
+    country             = None
+    level_of_education  = None
+
+    na = ('None', 'none', 'N', 'N/A', '', ' ', None)
 
     for key in doc:
         if key in ('_id', 'id', 'username', 'data'): continue
@@ -102,12 +116,29 @@ def traitement_user(doc):
             stmts['Notes'].append({'course_id': key, 'user_id': doc['_id'], 'grade': doc[key]['grade']})
 
         if 'gender' in doc[key]:
-            gender = doc[key]['gender'] if doc[key]['gender'] != 'None' or doc[key]['gender'] != '' else None
+            gender = unidecode(doc[key]['gender']).lower() if doc[key]['gender'] not in na else gender
 
         if 'year_of_birth' in doc[key]:
-            year_of_birth = doc[key]['year_of_birth'] if doc[key]['year_of_birth'] != 'None' else None
+            year_of_birth = doc[key]['year_of_birth'] if doc[key]['year_of_birth'] not in na else year_of_birth
 
-    stmts['Users'].append({'id': doc['_id'], 'username': doc['username'], 'gender': gender, 'year_of_birth': year_of_birth})
+        if 'city' in doc[key]:
+            city = unidecode(doc[key]['city']).lower() if doc[key]['city'] not in na else city
+
+        if 'country' in doc[key]:
+            country = unidecode(doc[key]['country']).lower() if doc[key]['country'] not in na else country
+
+        if 'level_of_education' in doc[key]:
+            level_of_education = unidecode(doc[key]['level_of_education']).lower() if doc[key]['level_of_education'] not in na else level_of_education
+
+    stmts['Users'].append({
+        'id':                   doc['_id'],
+        'username':             doc['username'],
+        'gender':               gender,
+        'year_of_birth':        year_of_birth,
+        'city':                 city,
+        'country':              country,
+        'level_of_education':   level_of_education,
+    })
 
 
 def traitement_forum(doc):
@@ -136,7 +167,7 @@ def boucles(cursor, boucle, name_print, len_cursor, print_insert = False):
         n += 1
         n_perc = int(n / len_cursor * 100)
 
-        if perc // 5 != n_perc // 5:
+        if perc // 10 != n_perc // 10:
 
             perc = n_perc
 
@@ -154,34 +185,28 @@ def boucles(cursor, boucle, name_print, len_cursor, print_insert = False):
 db = mongoClient['g1-MOOC']
 global_time = time.time()
 
-cursor = db['User'].find().limit(1000)
-len_cursor = len(list(cursor.clone()))
+print(f"\n ----- DOWNLOAD DATA FROM MONGO", end='')
 
-boucles(cursor, traitement_user, "USER", len_cursor, True)
+t = time.time()
 
-cursor = db['Forum'].find().limit(1000)
-len_cursor = len(list(cursor.clone()))
+cursor_user = db['User'].find()
+cursor_forum = db['Forum'].find()
 
-boucles(cursor, traitement_forum, "FORUM", len_cursor, True)
+print(f" / TIME : {calc_time(t)}")
 
-tables_in_order = ['Course', 'Users', 'Notes', 'Threads', 'Messages']
-nb_chunks = 20
+boucles(cursor_user, traitement_user, "USER", len(list(cursor_user.clone())), True)
+boucles(cursor_forum, traitement_forum, "FORUM", len(list(cursor_forum.clone())), True)
+
+tables_in_order = ['Course', 'Users', 'Users_2', 'Notes', 'Threads', 'Messages']
 
 for key in tables_in_order:
 
     total_time = time.time()
-    print(f"\n ----- EXECUTE {key.upper()}\n")
-    chunk_size = ceil(len(stmts[key]) / nb_chunks)
+    print(f"\n ----- EXECUTE {key.upper():10}", end='')
 
-    for x in range(20):
+    mysqlConn.execute(insert(META.tables[key.strip('_2')]).prefix_with("IGNORE"), stmts[key])
 
-        t = time.time()
-
-        mysqlConn.execute(insert(META.tables[key]).prefix_with("IGNORE"), stmts[key][x * chunk_size: (x + 1) * chunk_size])
-
-        print(f" - {int((x + 1) * 100 / nb_chunks):3} %   EXECUTE {key.upper()}   {calc_time(t)}")
-
-    print(f"--- EXECUTE {key.upper()} TIME : {calc_time(total_time)}")
+    print(f" / TIME : {calc_time(total_time)}")
 
 print('\n-------- COMMIT')
 mysqlConn.commit()
