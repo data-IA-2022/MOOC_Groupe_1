@@ -1,0 +1,95 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+  <style>
+    .topnav {
+        background-color: #d13636;
+        overflow: hidden;
+      }
+      
+      .topnav a {
+        float: left;
+        color: #f2f2f2;
+        text-align: center;
+        padding: 14px 16px;
+        text-decoration: none;
+        font-size: 17px;
+      }
+      
+      .topnav a:hover {
+        background-color: #ddd;
+        color: black;
+      }
+      
+      .topnav a.active {
+        background-color: #000000;
+        color: white;
+      }
+      </style>
+
+  <div class="topnav">
+    <a class="active" href="/">Accueil</a>
+    <a href="analyses">Analyse</a>
+    <a href="score">Score</a>
+  </div>
+<head>
+  <style>
+
+</style>
+  <meta charset="utf-8">
+  <title>Score</title>
+  <div class="container">
+    <form method="POST">
+      {% csrf_token %}
+          <label for="body">Message:</label>
+    <textarea id="body" name="body" oninput="autoResize()"></textarea>
+
+    <script>
+    function autoResize() {
+        let textArea = document.getElementById("body");
+        textArea.style.height = "auto";
+        textArea.style.height = textArea.scrollHeight + "px";
+}
+</script>
+    <br>
+      <label for="gender">Genre:</label>
+      <select name="gender">
+        <option value="f">Femme</option>
+        <option value="m">Homme</option>
+        <option value="o">Autre</option>
+      </select>
+      
+      <br>
+      <label for="year_of_birth">Date de naissance:</label>
+      <select name="year_of_birth" id="year_of_birth"></select>
+      
+      <script>
+        var select = document.getElementById("year_of_birth");
+      
+        for (var i = 1898; i <= 2017; i++) {
+          var option = document.createElement("option");
+          option.text = i;
+          option.value = i;
+          select.add(option);
+        }
+      </script>
+      
+      <br>
+      <label for="city">Ville d'habitation:</label>
+      <input type="text" id="city" name="city">
+      <br>
+      <label for="country">Pays actuelle:</label>
+      <input type="text" id="country" name="country">
+      <br>
+      <label for="level_of_educcation">Dernier diplôme obtenu:</label>
+      <input type="text" id="level_of_educcation" name="level_of_educcation">
+      <br>
+      <button type="submit">Predict</button>
+    </form>
+</head>
+<body>
+
+  <h1>Score</h1>
+
+</body>
+</html>

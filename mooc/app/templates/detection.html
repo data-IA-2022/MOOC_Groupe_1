@@ -1,0 +1,52 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+    
+
+    <head>
+        <meta charset="utf-8">
+        <title>detection</title>
+       
+    </head>
+    <body>
+    <style>
+        .tabimage {
+            width: 1000px;
+            height: 800px;
+            margin: 0 50px;
+        }
+        
+      .topnav {
+          background-color: #d13636;
+          overflow: hidden;
+        }
+        
+        .topnav a {
+          float: left;
+          color: #f2f2f2;
+          text-align: center;
+          padding: 14px 16px;
+          text-decoration: none;
+          font-size: 17px;
+        }
+        
+        .topnav a:hover {
+          background-color: #ddd;
+          color: black;
+        }
+        
+        .topnav a.active {
+          background-color: #000000;
+          color: white;
+        }
+        </style>
+        <div class="topnav">
+            <a class="active" href="/">Accueil</a>
+            <a href="analyses">Analyse</a>
+            <a href="score">Score</a>
+          </div>
+    <h1> Nous sommes en construction vous n'êtes pas autorisé à rentrer</h1>
+    <img class="tabimage" src="{% static 'interdiction.png' %}" alt="Image">
+ 
+</body>
+</html>

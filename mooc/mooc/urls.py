@@ -16,9 +16,16 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from app.views import home
-
+from app.views import analyses
+from app.views import score
+from app.views import detection
+from app.views import sentiments
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path("", home , name="home"),
+    path("detection", detection , name="detection"),
+    path("sentiments", sentiments , name="sentiments"),
+    path("analyses", analyses , name="analyses"),
+    path("score", score , name="score"),
 ]
