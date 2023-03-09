@@ -2,6 +2,57 @@
 <!DOCTYPE html>
 <html>
   <style>
+    ul {
+      list-style: none;
+      padding-top: 100px;
+      color: black !important;
+      margin: 0;
+  }
+  
+  li {
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 5px;
+      box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+      font-size: 16px;
+  }
+  
+  
+  p {
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+      font-size: 16px;
+  }
+
+  /* Style pour la liste déroulante de l'autocomplétion */
+  .ui-autocomplete {
+      position: absolute;
+      z-index: 9999;
+      background-color: white;
+      border: 1px solid #ccc;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      max-height: 500px;
+      overflow-y: auto;
+      box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+      
+  }
+
+  .ui-autocomplete li {
+      padding: 5px;
+      cursor: pointer;
+      
+  }
+
+  .ui-autocomplete li:hover {
+      background-color: #f2f2f2;
+      color: black;
+  }
+
     .topnav {
         background-color: #d13636;
         overflow: hidden;
@@ -33,9 +84,7 @@
     <a href="score">Score</a>
   </div>
 <head>
-  <style>
 
-</style>
   <meta charset="utf-8">
   <title>Score</title>
   <div class="container">
@@ -75,18 +124,47 @@
       </script>
       
       <br>
-      
-        <label for="id_city">Ville d'habitation:</label>
-        {{ city_form }}
-        <input type="submit" value="Submit">
+      <label for="city">Ville de Résidence</label>
+      <input id="city" name="city">
+
+      <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+      <script src="https://code.jquery.com/ui/1.13.1/jquery-ui.min.js"></script>
+      <script>
+          $(function() {
+              var city = [{% for city in city %}"{{ city }}",{% endfor %}];
+              $("#city").autocomplete({
+                  source: city,
+                  delay : 800,
+              });
+          });
+      </script>
 <br>
 
 
       <label for="country">Pays actuelle:</label>
       <input type="text" id="country" name="country">
+      <script>
+        $(function() {
+            var country = [{% for country in country %}"{{ country }}",{% endfor %}];
+            $("#country").autocomplete({
+                source: country,
+                delay : 800,
+            });
+        });
+    </script>
       <br>
       <label for="level_of_educcation">Dernier diplôme obtenu:</label>
-      <input type="text" id="level_of_educcation" name="level_of_educcation">
+      <select name="level_of_educcation">
+        <option value="p">Doctorat</option>
+        <option value="m">Master ou diplôme professionnel</option>
+        <option value="b">Autre</option>
+        <option value="a">Diplôme de premier cycle supérieur</option>
+        <option value="hs">Niveau associé</option>
+        <option value="jhs">Lycéé / enseignement secondaire</option>
+        <option value="el">Enseignement primaire</option>
+        <option value="none">Pas de Formation Scolaire</option>
+        <option value="other">Autres Etudes</option>
+      </select>
       <br>
       <button type="submit">Predict</button>
     </form>
@@ -94,6 +172,7 @@
 <body>
 
   <h1>Score</h1>
+
 
 </body>
 </html>

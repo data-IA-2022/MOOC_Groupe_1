@@ -32,19 +32,14 @@ def score(request):
     mysqlConn.begin()
 
     df = pd.read_sql('Users', mysqlConn)
+    ssh.close()
     df_city = df['city'].unique().tolist()
-    df_country = df["country"]
-    df_level_of_education = df["level_of_education"]
-    
-    from django import forms
 
-    class CityForm(forms.Form):
-        city_choices = df_city
-        city = forms.ChoiceField(choices=city_choices, required=True)
+    df_country = df["country"].unique().tolist()
+    df_level_of_education = df["level_of_education"].unique().tolist()
+   
 
-    city_form = CityForm()
-
-    print(df)
-
-    context = {'city_form': city_form}
+    context = {'city': df_city,
+               "country":df_country,
+               "level_of_education":df_level_of_education}
     return render(request, 'score.html', context)
