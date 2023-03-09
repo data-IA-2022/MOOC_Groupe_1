@@ -70,7 +70,7 @@ def traitement(msg, thread_id, parent_id=None):
         'id':           msg['id'],
         'type':         msg['type'],
         'created_at':   dt,
-        'user_id':      msg['user_id'] if 'user_id' in msg else None,
+        'username':      msg['username'] if 'username' in msg else None,
         'depth':        msg['depth'] if 'depth' in msg else None,
         'body':         msg['body'],
         'parent_id':    parent_id,
@@ -105,15 +105,24 @@ def traitement_user(doc):
     country             = None
     level_of_education  = None
 
-    na = ('None', 'none', 'N', 'N/A', '', ' ', None)
+    na = ('None', 'none', 'N/A', '', ' ', None)
 
     for key in doc:
         if key in ('_id', 'id', 'username', 'data'): continue
 
         stmts['Course'].append({'id': key})
 
+        grade = None
+        certificate_delivered = None
+
         if 'grade' in doc[key]:
-            stmts['Notes'].append({'course_id': key, 'user_id': doc['_id'], 'grade': doc[key]['grade']})
+            grade = doc[key]['grade']
+
+        if 'Certificate Delivered' in doc[key]:
+            certificate_delivered = doc[key]['Certificate Delivered']
+
+        if grade is not None or certificate_delivered is not None:
+            stmts['Notes'].append({'course_id': key, 'username': doc['username'], 'grade': grade, 'certificate_delivered': certificate_delivered})
 
         if 'gender' in doc[key]:
             gender = unidecode(doc[key]['gender']).lower() if doc[key]['gender'] not in na else gender
