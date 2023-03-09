@@ -1,43 +1,55 @@
 {% load static %}
 <!DOCTYPE html>
 <html>
-<head>
-    <title>Analyse de sentiments, détection de langues et de réussite avec Django</title>
-    <link rel="stylesheet" href="{% static 'style.css' %}">
-</head>
-<body>
-    <h1>Analyse de sentiments, détection de langues et de réussite avec Django</h1>
+  <head>
+    <title>
+      Analyse de sentiments, détection de langues et de réussite avec Django
+    </title>
+    <link rel="stylesheet" href="{% static 'style.css' %}" />
+  </head>
+  <body>
+    <h1>
+      Analyse de sentiments, détection de langues et de réussite avec Django
+    </h1>
     <!-- Onglets -->
     <div class="tab">
-        
-        <div class="tab-container">
-            <img class="tabimage" src="{% static 'analyses_sentiments.jpeg' %}" alt="Image 1">
-            <div class="btn-overlay">
-                <a href="sentiments">Analyse de sentiment</a>
-            </div>
+      <div class="tab-container">
+        <img
+          class="tabimage"
+          src="{% static 'analyses_sentiments.jpeg' %}"
+          alt="Image 1"
+        />
+        <div class="btn-overlay">
+          <a href="sentiments">Analyse de sentiment</a>
         </div>
-        <div class="tab-container">
-            <img class="tabimage" src="{% static 'detection_language.jpg' %}" alt="Image 2">
-            <div class="btn-overlay">
-                <a href="detection">Détection de langue</a>
-            </div>
-            
+      </div>
+      <div class="tab-container">
+        <img
+          class="tabimage"
+          src="{% static 'detection_language.jpg' %}"
+          alt="Image 2"
+        />
+        <div class="btn-overlay">
+          <a href="detection">Détection de langue</a>
         </div>
-        <div class="tab-container">
-            <img class="tabimage" src="{% static 'reussite_ou_echec.jpeg' %}" alt="Image 3">
-            <div class="btn-overlay">
-                <a href="score">Calcul de réussite</a>
-            </div>
-            
+      </div>
+      <div class="tab-container">
+        <img
+          class="tabimage"
+          src="{% static 'reussite_ou_echec.jpeg' %}"
+          alt="Image 3"
+        />
+        <div class="btn-overlay">
+          <a href="score">Calcul de réussite</a>
         </div>
+      </div>
 
-        <div class="tab-container">
-            <img class="tabimage" src="{% static 'analyze.jpeg' %}" alt="Image 4">
-                <div class="btn-overlay">
-                    <a href="analyses">Analyse</a>
-                </div>
+      <div class="tab-container">
+        <img class="tabimage" src="{% static 'analyze.jpeg' %}" alt="Image 4" />
+        <div class="btn-overlay">
+          <a href="analyses">Analyse</a>
         </div>
+      </div>
     </div>
-    
-</body>
+  </body>
 </html>

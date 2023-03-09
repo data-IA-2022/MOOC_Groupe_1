@@ -1,83 +1,83 @@
 body {
-    background: #ccc;
-    width: 100%;
-    height: 50vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  background: #ccc;
+  width: 100%;
+  height: 50vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 img {
-    position: relative;
+  position: relative;
 }
 
 h1 {
-    height: 95%;
-    text-align: center;
-    justify-content: center;
-    margin-top: 0;
-    position: relative;
+  height: 95%;
+  text-align: center;
+  justify-content: center;
+  margin-top: 0;
+  position: relative;
 }
 
 .tab {
-    display: flex;
-    width: 100%;
-    height: 40%;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
-    position: absolute;
-    margin-bottom: 0px;
+  display: flex;
+  width: 100%;
+  height: 40%;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  margin-bottom: 0px;
 }
 
 .tab-container {
-    position: relative;
-    width: 50%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  position: relative;
+  width: 50%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .tabimage:hover {
-    opacity: 0.7; /* diminue l'opacité de l'image */
+  opacity: 0.7; /* diminue l'opacité de l'image */
 }
 
 /* Styles pour les boutons */
 .btn-overlay {
-    opacity: 0;
-    transition: all 0.3s ease-in-out;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+  opacity: 0;
+  transition: all 0.3s ease-in-out;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .btn-overlay:hover {
-    opacity: 0.6;
+  opacity: 0.6;
 }
 
 /* Styles pour les liens des boutons */
 .btn-overlay a {
-    text-decoration: none;
-    color: white;
-    font-size: 16px;
-    font-weight: bold;
-    padding: 10px 15px;
-    background-color: #000;
-    border-radius: 5px;
+  text-decoration: none;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  padding: 10px 15px;
+  background-color: #000;
+  border-radius: 5px;
 }
 
 .btn-overlay a:hover {
-    background-color: #666;
+  background-color: #666;
 }
 
 .tabimage:hover {
-    opacity: 0.7; /* diminue l'opacité de l'image */
+  opacity: 0.7; /* diminue l'opacité de l'image */
 }
 
 .tabimage {
-    width: 500px;
-    height: 250px;
-    margin: 0 50px;
+  width: 500px;
+  height: 250px;
+  margin: 0 50px;
 }
