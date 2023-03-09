@@ -1,6 +1,6 @@
 
-import xgboost as xgb
 import pandas as pd
+from xgboost import XGBClassifier
 from sklearn.decomposition import KernelPCA
 from sklearn.discriminant_analysis import (LinearDiscriminantAnalysis,
                                            QuadraticDiscriminantAnalysis)
@@ -12,8 +12,61 @@ from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.svm import SVC
-from utils import calc_time, connect_ssh_tunnel, connect_to_db, relative_path
 from sqlalchemy import text
+from utils import calc_time, connect_ssh_tunnel, connect_to_db, relative_path
+from sklearn.metrics import f1_score, roc_auc_score, accuracy_score
+import time
+
+from sklearn.preprocessing import OneHotEncoder, LabelEncoder, MinMaxScaler, RobustScaler
+from typing import Dict
+from sklearn.compose import ColumnTransformer
+from sklearn.impute import SimpleImputer
+
+
+def fit_model(model, x_train, x_test, y_train, y_test):
+    start = time.time()
+    model.fit(x_train, y_train)
+    elapsed = time.time() - start
+    y_predicted = model.predict(x_test)
+
+    return {
+        "time": elapsed,
+        "accuracy": accuracy_score(y_test, y_predicted),
+        "f1": f1_score(y_test, y_predicted, average="weighted"),
+    }
+
+
+def get_pipeline_preparation():
+
+    columns_OneHot          = ['city', 'course_id', 'gender', 'country', 'level_of_education']
+    columns_MinMax          = ['year_of_birth']
+    columns_Robust          = ['subjectivity', 'nb_messages']
+    columns_pass            = ['polarity']
+
+    transfo_year = Pipeline([
+        ('imputer', SimpleImputer()),
+        ('encoder', MinMaxScaler())
+    ])
+    
+    transfo_data = Pipeline([
+        ('imputer', SimpleImputer(strategy='constant', fill_value='')),
+        ('encoder', OneHotEncoder(handle_unknown='ignore', sparse_output=False))
+    ])
+
+    transformers = [
+        ('col_OnHot',           transfo_data,       columns_OneHot),
+        ('col_MinMax',          transfo_year,       columns_MinMax),
+        ('col_Robust',          RobustScaler(),     columns_Robust),
+        ('col_pass',           'passthrough',       columns_pass),
+    ]
+
+    return ColumnTransformer(transformers)
+
+
+def get_pipeline_model(model):
+
+    return Pipeline([('preparation', get_pipeline_preparation()), ('model', model)])
+
 
 config_file = relative_path("config_vm.yaml")
 sshtunnel_mysql = connect_ssh_tunnel(config_file, "ssh_mysql")
@@ -34,17 +87,47 @@ models = {
     "quadratic-svc": SVC(kernel="poly", degree=2),
     "cubic-svc": SVC(kernel="poly", degree=3),
     "rbf-svc": SVC(kernel="rbf"),
-    "xgboost": xgb.XGBClassifier(tree_method="hist", n_jobs=-1, enable_categorical=True)
+    "xgboost": XGBClassifier(tree_method="hist", n_jobs=-1, enable_categorical=True)
 }
 
-df_messages = pd.read_sql(text("SELECT username, polarity, subjectivity FROM Messages"), mysqlConn)
-df_users = pd.read_sql(text("SELECT username, gender, year_of_birth, city, country, level_of_education FROM Users"), mysqlConn)
-df_notes = pd.read_sql(text("SELECT username, certificate_delivered FROM Notes"), mysqlConn)
+df_messages = pd.read_sql(text("SELECT username, AVG(polarity) as polarity, AVG(subjectivity) as subjectivity, COUNT(*) as nb_messages FROM Messages GROUP BY username"), mysqlConn).set_index('username')
+df_users = pd.read_sql(text("SELECT username, gender, year_of_birth, city, country, level_of_education FROM Users"), mysqlConn).set_index('username')
+df_notes = pd.read_sql(text("SELECT username, certificate_delivered, course_id FROM Notes"), mysqlConn).set_index('username')
 
-df = df_messages.join((df_users, df_users), 'username', 'inner')
+sshtunnel_mysql.close()
+
+df = df_users.join(df_messages, 'username', 'inner')
+df = df.join(df_notes, 'username', 'inner').reset_index()
+
+df.dropna(subset = ['certificate_delivered'], inplace=True)
+df.drop(columns='username', inplace=True)
 
 print(df.shape)
-print(df.columns)
+print(df.isna().sum())
+print(df.head(20))
 
-X_train, X_test, y_train, y_test = train_test_split(X, y_labels, test_size=0.2)
-X_train.shape, X_test.shape
+X = df.drop(columns=('certificate_delivered'))
+
+y = df['certificate_delivered']
+
+y = LabelEncoder().fit_transform(y)
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+
+result: Dict[str, float] = {}
+
+for name, model in models.items():
+    print("Training ", name, "...")
+    pipeline = get_pipeline_model(model)
+    result[name] = fit_model(
+        pipeline,
+        X_train,
+        X_test,
+        y_train,
+        y_test
+    )
+    for key, value in result[name].items():
+        print(f"\t{key.capitalize()}: {value}")
+
+result = pd.DataFrame(result).T
+result.to_csv('model_result.csv')
