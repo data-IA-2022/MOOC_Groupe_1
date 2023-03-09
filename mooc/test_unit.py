@@ -27,7 +27,7 @@ class TestMain(unittest.TestCase):
         parent_id = 2
         thread_id = 3
         stmts = {'Users_2': [], 'Messages': []}
-        traitement(msg, thread_id, parent_id)
+        traitement(msg, thread_id, parent_id,stmts)
         self.assertEqual(len(stmts['Users_2']), 1)
         self.assertEqual(len(stmts['Messages']), 1)
 

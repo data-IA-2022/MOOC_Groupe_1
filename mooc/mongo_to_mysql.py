@@ -56,7 +56,14 @@ def recur_message(msg, f, thread_id, parent_id = None):
             recur_message(child, f, thread_id, parent_id = msg['id'])
 
 
-def traitement(msg, thread_id, parent_id=None):
+def traitement(msg, thread_id, parent_id=None,stmts= {
+    'Users': [],
+    'Users_2': [],
+    'Threads': [],
+    'Messages': [],
+    'Course': [],
+    'Notes': [],
+}):
     '''
     Effectue un traitement sur l'obj passé (Message)
     :param msg: Message
@@ -80,7 +87,7 @@ def traitement(msg, thread_id, parent_id=None):
     if not msg['anonymous'] and not msg['anonymous_to_peers']:
         stmts['Users_2'].append({
             'id':                   msg['user_id'],
-            'username':             msg['username'],
+            'username':             msg.get('username'),
             'gender':               None,
             'year_of_birth':        None,
             'city':                 None,
