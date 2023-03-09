@@ -1,26 +1,22 @@
 
+import time
+from typing import Dict
+
 import pandas as pd
-from xgboost import XGBClassifier
-from sklearn.decomposition import KernelPCA
-from sklearn.discriminant_analysis import (LinearDiscriminantAnalysis,
-                                           QuadraticDiscriminantAnalysis)
-from sklearn.ensemble import (AdaBoostClassifier, GradientBoostingClassifier,
-                              RandomForestClassifier)
-from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.compose import ColumnTransformer
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
+from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, f1_score
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import LabelEncoder, MinMaxScaler, OneHotEncoder, RobustScaler
 from sklearn.svm import SVC
 from sqlalchemy import text
-from utils import calc_time, connect_ssh_tunnel, connect_to_db, relative_path
-from sklearn.metrics import f1_score, roc_auc_score, accuracy_score
-import time
-
-from sklearn.preprocessing import OneHotEncoder, LabelEncoder, MinMaxScaler, RobustScaler
-from typing import Dict
-from sklearn.compose import ColumnTransformer
-from sklearn.impute import SimpleImputer
+from utils import connect_ssh_tunnel, connect_to_db, relative_path
+from xgboost import XGBClassifier
 
 
 def fit_model(model, x_train, x_test, y_train, y_test):
@@ -106,6 +102,8 @@ print(df.shape)
 print(df.isna().sum())
 print(df.head(20))
 
+df.to_csv(relative_path('dataset_model.csv'), index = False)
+
 X = df.drop(columns=('certificate_delivered'))
 
 y = df['certificate_delivered']
@@ -130,4 +128,4 @@ for name, model in models.items():
         print(f"\t{key.capitalize()}: {value}")
 
 result = pd.DataFrame(result).T
-result.to_csv('model_result.csv')
+result.to_csv(relative_path('model_result.csv'))
