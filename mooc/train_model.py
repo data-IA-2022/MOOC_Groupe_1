@@ -95,7 +95,7 @@ def main():
     if not exists(file_path := relative_path('GIGAMODEL.study')):
 
         study = optuna.create_study(direction="maximize")  # Create a new study.
-        study.optimize(get_objective(X_train, X_test, y_train, y_test), n_trials=500, show_progress_bar=True)  # Invoke optimization of the objective function.
+        study.optimize(get_objective(X_train, X_test, y_train, y_test), n_trials=1000, show_progress_bar=True)  # Invoke optimization of the objective function.
 
         pickle.dump(study, open(file_path, 'wb'))
 
