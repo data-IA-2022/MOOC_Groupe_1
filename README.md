@@ -10,10 +10,11 @@ https://docs.google.com/presentation/d/1YDlEOJ106HcNGw5hT8LLWF3C90Wn8peyCb6ZjnQz
 
 ## Ficher config
 
-**Pour fonctionner la plupart des scripts ont besoin d'un fichier 'config.yaml' dans le dossier 'mooc'.**
+**Pour fonctionner la plupart des scripts ont besoin d'un fichier `config.yaml` dans le dossier `mooc`.**
 
 **Celui-ci doit être structuré comme ceci :**
 
+```yaml
 database_mongodb:
     user:           
     password:       
@@ -49,3 +50,4 @@ ssh_mysql:
     remote_port:    
     local_adr:      127.0.0.1
     local_port:     3306
+```
