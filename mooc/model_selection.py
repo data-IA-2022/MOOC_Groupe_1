@@ -64,7 +64,7 @@ def get_pipeline_model(model):
     return Pipeline([('preparation', get_pipeline_preparation()), ('model', model)])
 
 
-config_file = relative_path("config_vm.yaml")
+config_file = relative_path("config.yaml")
 sshtunnel_mysql = connect_ssh_tunnel(config_file, "ssh_mysql")
 
 mysqlEngine = connect_to_db(config_file, "database_mysql")

@@ -5,7 +5,7 @@ from sqlalchemy import MetaData
 from sqlalchemy.dialects.mysql import insert
 from utils import calc_time, connect_ssh_tunnel, connect_to_db, relative_path
 
-config_file = relative_path("config_vm.yaml")
+config_file = relative_path("config.yaml")
 
 sshtunnel_mongodb = connect_ssh_tunnel(config_file, "ssh_mongodb")
 sshtunnel_mysql = connect_ssh_tunnel(config_file, "ssh_mysql")

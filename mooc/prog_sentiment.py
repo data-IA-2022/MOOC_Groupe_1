@@ -7,7 +7,7 @@ from utils import calc_time, connect_ssh_tunnel, connect_to_db, relative_path
 
 global_time = time.time()
 
-config_file = relative_path("config_vm.yaml")
+config_file = relative_path("config.yaml")
 sshtunnel_mysql = connect_ssh_tunnel(config_file, "ssh_mysql")
 
 mysqlEngine = connect_to_db(config_file, "database_mysql")
