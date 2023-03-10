@@ -34,15 +34,51 @@
   </div>
 <head>
   <style>
-
+    .slider-container {
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .slider-image {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: auto;
+      animation: slideLeft 10s linear infinite;
+    }
+    
+    @keyframes slideLeft {
+      0% {
+        transform: translateX(0);
+      }
+      100% {
+        transform: translateX(-100%);
+      }
+    }
+    
 </style>
   <meta charset="utf-8">
   <title>Analyses</title>
   
 </head>
 <body>
-
   <h1>Analyses</h1>
- 
+  <div class="slider-container">
+    <img src="image.jpg" alt="Image" class="slider-image">
+  </div>
+  
+  <script>
+    // Récupérez l'élément image
+    const sliderImage = document.querySelector('.slider-image');
+  
+    // Ajoutez un écouteur d'événement pour déclencher l'animation lorsque l'utilisateur interagit avec l'image
+    sliderImage.addEventListener('click', () => {
+      sliderImage.style.animationPlayState = 'paused';
+    });
+  </script>
+  
+
+
 </body>
 </html>
