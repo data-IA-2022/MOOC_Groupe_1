@@ -43,7 +43,7 @@ def get_pipeline_preparation():
         ('imputer', SimpleImputer()),
         ('encoder', MinMaxScaler())
     ])
-    
+
     transfo_data = Pipeline([
         ('imputer', SimpleImputer(strategy='constant', fill_value='')),
         ('encoder', OneHotEncoder(handle_unknown='ignore', sparse_output=False))
