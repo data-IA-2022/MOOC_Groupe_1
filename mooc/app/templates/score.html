@@ -1,6 +1,7 @@
 {% load static %}
 <!DOCTYPE html>
 <html>
+<head>
   <style>
     ul {
       list-style: none;
@@ -104,15 +105,18 @@
       }
       </style>
 
+  <meta charset="utf-8">
+  <title>Score</title>
+
+</head>
+<body>
+
   <div class="topnav">
     <a class="active" href="/">Accueil</a>
     <a href="analyses">Analyse</a>
     <a href="score">Score</a>
   </div>
-<head>
 
-  <meta charset="utf-8">
-  <title>Score</title>
   <div class="container">
     <form method="POST">
       {% csrf_token %}
@@ -135,6 +139,12 @@
       </select>
       
       <br>
+      <label for="nb_messages">Nombres de messsages publiés</label>
+      <input type= "number" id="nb_messages" name="nb_messages">
+
+
+<br>
+
       <label for="year_of_birth">Date de naissance:</label>
       <select name="year_of_birth" id="year_of_birth"></select>
       
@@ -179,8 +189,8 @@
         });
     </script>
       <br>
-      <label for="level_of_educcation">Dernier diplôme obtenu:</label>
-      <select name="level_of_educcation">
+      <label for="level_of_education">Dernier diplôme obtenu:</label>
+      <select name="level_of_education">
         <option value="p">Doctorat</option>
         <option value="m">Master ou diplôme professionnel</option>
         <option value="b">Autre</option>
@@ -192,13 +202,28 @@
         <option value="other">Autres Etudes</option>
       </select>
       <br>
+      <label for="course_id">Cours suivi</label>
+      <input type="text" id="course_id" name="course_id">
+      <script>
+        $(function() {
+            var course_id = [{% for course_id in course_id %}"{{ course_id }}",{% endfor %}];
+            $("#course_id").autocomplete({
+                source: course_id,
+                delay : 800,
+            });
+        });
+    </script>
+    <br>
       <button type="submit">Predict</button>
     </form>
-</head>
-<body>
 
-  <h1>Score</h1>
+  {% if result == 0 %}
+    <h1>Vous n'aurez pas votre diplôme</h1>
+  {% endif %}
 
+  {% if result == 1 %}
+    <h1>Vous aurez votre diplôme, bravo !</h1>
+  {% endif %}
 
 </body>
 </html>
